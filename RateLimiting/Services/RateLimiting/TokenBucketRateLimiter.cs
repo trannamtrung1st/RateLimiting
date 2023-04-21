@@ -39,13 +39,23 @@ namespace RateLimiting.Services.RateLimiting
             double lastUpdateMs = double.TryParse(lastUpdateVal, out var time) ? time : 0;
             double now = TimeSpan.FromTicks(DateTime.UtcNow.Ticks).TotalMilliseconds;
 
-            if (now - lastUpdateMs > refillTimeInMs)
+            if (now - lastUpdateMs >= refillTimeInMs)
             {
-                int refillCount = (int)Math.Floor((now - lastUpdateMs) / refillTimeInMs);
-                long resetAmount = Math.Min(
-                    maxBucketAmount,
-                    remainingTokens + refillCount * refillAmount);
-                lastUpdateMs = Math.Min(now, lastUpdateMs + refillCount * refillTimeInMs);
+                long resetAmount;
+
+                if (lastUpdateMs == 0)
+                {
+                    resetAmount = maxBucketAmount;
+                    lastUpdateMs = now;
+                }
+                else
+                {
+                    int refillCount = (int)Math.Floor((now - lastUpdateMs) / refillTimeInMs);
+                    resetAmount = Math.Min(
+                        maxBucketAmount,
+                        remainingTokens + refillCount * refillAmount);
+                    lastUpdateMs = Math.Min(now, lastUpdateMs + refillCount * refillTimeInMs);
+                }
 
                 remainingTokens = resetAmount;
                 db.HashSet(storedKey, Key_Tokens, resetAmount);
