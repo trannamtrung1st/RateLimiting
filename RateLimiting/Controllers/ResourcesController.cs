@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using RateLimiting.Filters;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,7 +8,7 @@ using System.Linq;
 namespace RateLimiting.Controllers
 {
     [ApiController]
-    [Route("[controller]")]
+    [Route("api/[controller]")]
     public class ResourcesController : ControllerBase
     {
         private static readonly string[] Summaries = new[]
@@ -23,6 +24,7 @@ namespace RateLimiting.Controllers
         }
 
         [HttpGet]
+        [ServiceFilter(typeof(TokenBucketLimit))]
         public IEnumerable<string> Get()
         {
             var rng = new Random();

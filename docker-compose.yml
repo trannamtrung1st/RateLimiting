@@ -1,0 +1,12 @@
+version: "3.8"
+
+services:
+  redis:
+    image: redis:7.0.8-alpine
+    ports:
+      - target: 6379
+        published: 6379
+
+networks:
+  default:
+    name: rate-limiting-shared-network
