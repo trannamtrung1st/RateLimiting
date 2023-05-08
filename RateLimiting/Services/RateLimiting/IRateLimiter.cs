@@ -1,8 +1,10 @@
-﻿namespace RateLimiting.Services.RateLimiting
+﻿using System.Threading.Tasks;
+
+namespace RateLimiting.Services.RateLimiting
 {
     public interface IRateLimiter
     {
         bool IsAppliedFor(string algorithm);
-        bool RequestAccess(string key);
+        Task<bool> RequestAccess(string key, string requestId);
     }
 }

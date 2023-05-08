@@ -1,6 +1,8 @@
 ﻿using Microsoft.Extensions.Configuration;
+using RateLimiting.Utils;
 using StackExchange.Redis;
 using System;
+using System.Threading.Tasks;
 
 namespace RateLimiting.Services.RateLimiting
 {
@@ -23,11 +25,11 @@ namespace RateLimiting.Services.RateLimiting
 
         public override string Name => Constants.RateLimitingAlgorithms.TokenBucket;
 
-        public override bool RequestAccess(string key)
+        public override Task<bool> RequestAccess(string key, string requestId)
         {
             int maxBucketAmount = _configuration.GetValue<int>("RateLimitingSettings:TokenBucket:MaxBucketAmount");
             int refillAmount = _configuration.GetValue<int>("RateLimitingSettings:TokenBucket:RefillAmount");
-            double refillTimeInMs = _configuration.GetValue<double>("RateLimitingSettings:TokenBucket:RefillTimeInMs");
+            double refillIntervalMs = _configuration.GetValue<double>("RateLimitingSettings:TokenBucket:RefillIntervalMs");
 
             string storedKey = GetStoredKey(key);
 
@@ -39,7 +41,7 @@ namespace RateLimiting.Services.RateLimiting
             double lastUpdateMs = double.TryParse(lastUpdateVal, out var time) ? time : 0;
             double now = TimeSpan.FromTicks(DateTime.UtcNow.Ticks).TotalMilliseconds;
 
-            if (now - lastUpdateMs >= refillTimeInMs)
+            if (now - lastUpdateMs >= refillIntervalMs)
             {
                 long resetAmount;
 
@@ -50,33 +52,36 @@ namespace RateLimiting.Services.RateLimiting
                 }
                 else
                 {
-                    int refillCount = (int)Math.Floor((now - lastUpdateMs) / refillTimeInMs);
+                    int refillCount = (int)Math.Floor((now - lastUpdateMs) / refillIntervalMs);
                     resetAmount = Math.Min(
                         maxBucketAmount,
                         remainingTokens + refillCount * refillAmount);
-                    lastUpdateMs = Math.Min(now, lastUpdateMs + refillCount * refillTimeInMs);
+                    lastUpdateMs = Math.Min(now, lastUpdateMs + refillCount * refillIntervalMs);
                 }
 
                 remainingTokens = resetAmount;
                 db.HashSet(storedKey, Key_Tokens, resetAmount);
                 db.HashSet(storedKey, Key_LastUpdate, lastUpdateMs);
 
-                Console.WriteLine($"[{DateTime.Now}] Refill bucket: {resetAmount} token(s)");
+                ConsoleHelper.WriteLineDefault($"Refill bucket: {resetAmount} token(s)");
             }
 
-            Console.WriteLine($"[{DateTime.Now}] Remaining tokens (before): {remainingTokens}");
+            ConsoleHelper.WriteLineDefault($"Remaining tokens (before): {remainingTokens}");
 
-            if (remainingTokens > 0)
+            bool accepted = remainingTokens > 0;
+
+            if (accepted)
             {
-                Console.WriteLine($"[{DateTime.Now}] Remaining tokens (after): {remainingTokens - 1}");
+                ConsoleHelper.WriteLineDefault($"Remaining tokens (after): {remainingTokens - 1}");
 
                 db.HashDecrement(storedKey, Key_Tokens);
-                return true;
             }
             else
             {
-                return false;
+                ConsoleHelper.WriteLineDefault($"Failed to request, no token left");
             }
+
+            return Task.FromResult(accepted);
         }
     }
 }

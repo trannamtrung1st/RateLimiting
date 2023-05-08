@@ -2,8 +2,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using RateLimiting.Filters;
 using RateLimiting.Services.RateLimiting;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace RateLimiting.Utils
 {
@@ -15,8 +13,7 @@ namespace RateLimiting.Utils
         {
             return services.AddSingleton(provider =>
             {
-                var endpoints = configuration.GetSection("RedisEndpoints").Get<IEnumerable<string>>();
-                return RedisHelper.GetConnectionMultiplexer(endpoints.First());
+                return RedisHelper.GetConnectionMultiplexer(RedisHelper.GetDefaultEndpoint(configuration));
             });
         }
 
@@ -25,7 +22,10 @@ namespace RateLimiting.Utils
             return services
                 .AddSingleton<IRateLimiterProvider, RateLimiterProvider>()
                 .AddSingleton<IRateLimiter, TokenBucketRateLimiter>()
-                .AddTransient<TokenBucketLimit>();
+                .AddSingleton<IRateLimiter, LeakyBucketRateLimiter>()
+                .AddSingleton<ILeakyBucketProcessor, LeakyBucketProcessor>()
+                .AddTransient<TokenBucketLimit>()
+                .AddTransient<LeakyBucketLimit>();
         }
     }
 }

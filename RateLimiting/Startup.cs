@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using RateLimiting.Services;
 using RateLimiting.Utils;
 
 namespace RateLimiting
@@ -24,7 +25,8 @@ namespace RateLimiting
             services.AddSwaggerGen();
 
             services.AddRedisConnection(Configuration)
-                .AddRateLimiters();
+                .AddRateLimiters()
+                .AddSingleton<IRequestStore, RequestStore>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -44,6 +46,13 @@ namespace RateLimiting
             });
 
             app.UseRouting();
+
+            app.Use(async (context, next) =>
+            {
+                HttpHelper.TrySetRateLimitingKey(context);
+
+                await next();
+            });
 
             app.UseAuthorization();
 
