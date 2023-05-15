@@ -51,5 +51,17 @@ namespace RateLimiting.Controllers
 
             return StatusCode((int)HttpStatusCode.Created);
         }
+
+        [HttpGet("fixed-window-counter")]
+        [ServiceFilter(typeof(FixedWindowCounterLimit))]
+        public IEnumerable<string> GetFixedWindowCounter([FromHeader] string apiKey)
+        {
+            var rng = new Random();
+            return Enumerable
+                .Range(1, 5)
+                .Select(index => Summaries[rng.Next(Summaries.Length)])
+                .ToArray();
+        }
+
     }
 }

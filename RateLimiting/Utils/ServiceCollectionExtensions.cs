@@ -24,8 +24,11 @@ namespace RateLimiting.Utils
                 .AddSingleton<IRateLimiter, TokenBucketRateLimiter>()
                 .AddSingleton<IRateLimiter, LeakyBucketRateLimiter>()
                 .AddSingleton<ILeakyBucketProcessor, LeakyBucketProcessor>()
+                .AddSingleton<IRateLimiter, FixedWindowCounterRateLimiter>()
+                .AddSingleton<IFixedWindowCounterCleaner, FixedWindowCounterCleaner>()
                 .AddTransient<TokenBucketLimit>()
-                .AddTransient<LeakyBucketLimit>();
+                .AddTransient<LeakyBucketLimit>()
+                .AddTransient<FixedWindowCounterLimit>();
         }
     }
 }
