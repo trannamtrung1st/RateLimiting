@@ -39,6 +39,8 @@ namespace RateLimiting.Services.RateLimiting
 
             bool windowExists = true;
 
+            ConsoleHelper.WriteLineDefault($"Cleaning windows older than {currentWindow}");
+
             while (_lastWindow != windowCounter && windowExists)
             {
                 windowCounter -= 1;
