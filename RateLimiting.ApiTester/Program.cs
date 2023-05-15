@@ -15,11 +15,15 @@ namespace RateLimiting.ApiTester
             httpClient.BaseAddress = new Uri("http://localhost:5000", UriKind.Absolute);
             httpClient.DefaultRequestHeaders.Add("ApiKey", "ApiTester");
 
+            var tokenBucket = (path: "/api/resources/token-bucket", isPost: false);
+            var leakyBucket = (path: "/api/resources/leaky-bucket", isPost: true);
+            var fixedWindowCounter = (path: "/api/resources/fixed-window-counter", isPost: false);
+
             ParallelLoopResult result = Parallel.ForEach(Enumerable.Range(0, 15), (idx) =>
             {
-                //CallTokenBucketEndpoint(httpClient, idx).Wait();
+                (string path, bool isPost) = fixedWindowCounter;
 
-                //CallLeakyBucketEndpoint(httpClient, idx).Wait();
+                CallEndpoint(httpClient, path, idx, isPost).Wait();
             });
 
             while (!result.IsCompleted)
@@ -28,33 +32,22 @@ namespace RateLimiting.ApiTester
             }
         }
 
-        static async Task CallTokenBucketEndpoint(HttpClient httpClient, int idx)
+        static async Task CallEndpoint(HttpClient httpClient, string path, int idx, bool isPost)
         {
-            string path = "/api/resources/token-bucket";
-
             Console.WriteLine($"Thread {idx} sending request to {path}!");
 
-            HttpResponseMessage resp = await httpClient.GetAsync(path);
+            HttpResponseMessage resp;
 
-            if (resp.IsSuccessStatusCode)
+            if (isPost)
             {
-                Console.WriteLine($"Thread {idx} successfully sent request!");
+                resp = await httpClient.PostAsync(path,
+                    new StringContent(
+                        JsonConvert.SerializeObject($"Data {idx}"), Encoding.UTF8, "application/json"));
             }
             else
             {
-                Console.WriteLine($"Thread {idx} failed to send request!");
+                resp = await httpClient.GetAsync(path);
             }
-        }
-
-        static async Task CallLeakyBucketEndpoint(HttpClient httpClient, int idx)
-        {
-            string path = "/api/resources/leaky-bucket";
-
-            Console.WriteLine($"Thread {idx} sending request to {path}!");
-
-            HttpResponseMessage resp = await httpClient.PostAsync(path,
-                new StringContent(
-                    JsonConvert.SerializeObject($"Data {idx}"), Encoding.UTF8, "application/json"));
 
             if (resp.IsSuccessStatusCode)
             {
