@@ -18,6 +18,7 @@
             public const string TokenBucket = nameof(TokenBucket);
             public const string LeakyBucket = nameof(LeakyBucket);
             public const string FixedWindowCounter = nameof(FixedWindowCounter);
+            public const string SlidingWindowLogs = nameof(SlidingWindowLogs);
         }
     }
 }

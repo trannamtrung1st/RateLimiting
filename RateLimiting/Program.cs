@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using RateLimiting.Services.RateLimiting.FixedWindowCounter;
 using RateLimiting.Services.RateLimiting.LeakyBucket;
+using RateLimiting.Services.RateLimiting.SlidingWindowLogs;
 using System.Threading;
 
 namespace RateLimiting
@@ -17,6 +18,8 @@ namespace RateLimiting
             StartLeakyBucketProcessor(host);
 
             StartFixedWindowCounterCleaner(host);
+
+            StartSlidingWindowLogsCleaner(host);
 
             host.Run();
         }
@@ -55,6 +58,22 @@ namespace RateLimiting
                 using IServiceScope scope = host.Services.CreateScope();
 
                 IFixedWindowCounterCleaner cleaner = scope.ServiceProvider.GetRequiredService<IFixedWindowCounterCleaner>();
+
+                cleaner.Clean();
+            }, state: null, 0, cleaningInterval);
+        }
+
+        public static void StartSlidingWindowLogsCleaner(IHost host)
+        {
+            IConfiguration configuration = host.Services.GetRequiredService<IConfiguration>();
+
+            int cleaningInterval = configuration.GetValue<int>("RateLimitingSettings:SlidingWindowLogs:CleaningInterval");
+
+            Timer timer = new Timer((state) =>
+            {
+                using IServiceScope scope = host.Services.CreateScope();
+
+                ISlidingWindowLogsCleaner cleaner = scope.ServiceProvider.GetRequiredService<ISlidingWindowLogsCleaner>();
 
                 cleaner.Clean();
             }, state: null, 0, cleaningInterval);

@@ -63,5 +63,15 @@ namespace RateLimiting.Controllers
                 .ToArray();
         }
 
+        [HttpGet("sliding-window-logs")]
+        [ServiceFilter(typeof(SlidingWindowLogsLimit))]
+        public IEnumerable<string> GetSlidingWindowLogs([FromHeader] string apiKey)
+        {
+            var rng = new Random();
+            return Enumerable
+                .Range(1, 5)
+                .Select(index => Summaries[rng.Next(Summaries.Length)])
+                .ToArray();
+        }
     }
 }
