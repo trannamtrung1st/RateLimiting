@@ -2,7 +2,8 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using RateLimiting.Services.RateLimiting;
+using RateLimiting.Services.RateLimiting.FixedWindowCounter;
+using RateLimiting.Services.RateLimiting.LeakyBucket;
 using System.Threading;
 
 namespace RateLimiting

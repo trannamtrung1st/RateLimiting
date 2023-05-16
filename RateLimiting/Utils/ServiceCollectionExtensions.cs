@@ -2,6 +2,9 @@
 using Microsoft.Extensions.DependencyInjection;
 using RateLimiting.Filters;
 using RateLimiting.Services.RateLimiting;
+using RateLimiting.Services.RateLimiting.FixedWindowCounter;
+using RateLimiting.Services.RateLimiting.LeakyBucket;
+using RateLimiting.Services.RateLimiting.TokenBucket;
 
 namespace RateLimiting.Utils
 {

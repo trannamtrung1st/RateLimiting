@@ -4,7 +4,7 @@ using StackExchange.Redis;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace RateLimiting.Services.RateLimiting
+namespace RateLimiting.Services.RateLimiting.LeakyBucket
 {
     public interface ILeakyBucketProcessor
     {

@@ -4,7 +4,7 @@ using StackExchange.Redis;
 using System;
 using System.Threading.Tasks;
 
-namespace RateLimiting.Services.RateLimiting
+namespace RateLimiting.Services.RateLimiting.TokenBucket
 {
     // [IMPORTANT] must use distributed lock or Lua script to make it consistent in distributed environments
     public class TokenBucketRateLimiter : RateLimiter

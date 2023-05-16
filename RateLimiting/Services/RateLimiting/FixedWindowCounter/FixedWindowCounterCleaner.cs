@@ -3,7 +3,7 @@ using RateLimiting.Utils;
 using StackExchange.Redis;
 using System.Linq;
 
-namespace RateLimiting.Services.RateLimiting
+namespace RateLimiting.Services.RateLimiting.FixedWindowCounter
 {
     public interface IFixedWindowCounterCleaner
     {

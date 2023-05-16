@@ -4,7 +4,7 @@ using StackExchange.Redis;
 using System;
 using System.Threading.Tasks;
 
-namespace RateLimiting.Services.RateLimiting
+namespace RateLimiting.Services.RateLimiting.FixedWindowCounter
 {
     public class FixedWindowCounterRateLimiter : RateLimiter
     {
