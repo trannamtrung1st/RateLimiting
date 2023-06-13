@@ -23,16 +23,24 @@ namespace RateLimiting.Services.RateLimiting.FixedWindowCounter
 
         public override Task<bool> RequestAccess(string key, string requestId)
         {
+            int windowInterval = _configuration.GetValue<int>("RateLimitingSettings:FixedWindowCounter:WindowInterval");
             int maxAmount = _configuration.GetValue<int>("RateLimitingSettings:FixedWindowCounter:MaxAmount");
-            long currentWindow = GetCurrentWindow(_configuration);
+            long currentWindow = GetCurrentWindow(windowInterval);
 
             IDatabase db = _connectionMultiplexer.GetDatabase();
 
-            string storedKey = $"{GetStoredKey(key)}:{currentWindow}";
+            string storedKey = GetStoredKey(currentWindow.ToString());
 
-            long requestCount = db.StringIncrement(storedKey);
+            long requestCount = db.HashIncrement(storedKey, key);
 
             bool accepted = requestCount <= maxAmount;
+
+            if (requestCount == 1)
+            {
+                // [NOTE] make sure we keep the required bucket as long as necessary for calculation
+                TimeSpan expiry = TimeSpan.FromMilliseconds(windowInterval * 2);
+                db.KeyExpire(storedKey, expiry, when: ExpireWhen.HasNoExpiry);
+            }
 
             string value = $"request to key {key}, window {currentWindow}, new request count {requestCount}";
 
@@ -48,9 +56,8 @@ namespace RateLimiting.Services.RateLimiting.FixedWindowCounter
             return Task.FromResult(accepted);
         }
 
-        public static long GetCurrentWindow(IConfiguration configuration)
+        public static long GetCurrentWindow(int windowInterval)
         {
-            int windowInterval = configuration.GetValue<int>("RateLimitingSettings:FixedWindowCounter:WindowInterval");
             return (long)TimeSpan.FromTicks(DateTime.UtcNow.Ticks).TotalMilliseconds / windowInterval;
         }
     }

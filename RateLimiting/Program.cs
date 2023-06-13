@@ -2,9 +2,9 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using RateLimiting.Services.RateLimiting.FixedWindowCounter;
 using RateLimiting.Services.RateLimiting.LeakyBucket;
 using RateLimiting.Services.RateLimiting.SlidingWindowLogs;
+using System;
 using System.Threading;
 
 namespace RateLimiting
@@ -16,8 +16,6 @@ namespace RateLimiting
             IHost host = CreateHostBuilder(args).Build();
 
             StartLeakyBucketProcessor(host);
-
-            StartFixedWindowCounterCleaner(host);
 
             StartSlidingWindowLogsCleaner(host);
 
@@ -39,28 +37,19 @@ namespace RateLimiting
 
             Timer timer = new Timer((state) =>
             {
-                using IServiceScope scope = host.Services.CreateScope();
+                try
+                {
+                    using IServiceScope scope = host.Services.CreateScope();
 
-                ILeakyBucketProcessor processor = scope.ServiceProvider.GetRequiredService<ILeakyBucketProcessor>();
+                    ILeakyBucketProcessor processor = scope.ServiceProvider.GetRequiredService<ILeakyBucketProcessor>();
 
-                processor.ProcessRequests();
+                    processor.ProcessRequests();
+                }
+                catch (Exception ex)
+                {
+                    Console.Error.WriteLine(ex);
+                }
             }, state: null, 0, processRateMs);
-        }
-
-        public static void StartFixedWindowCounterCleaner(IHost host)
-        {
-            IConfiguration configuration = host.Services.GetRequiredService<IConfiguration>();
-
-            int cleaningInterval = configuration.GetValue<int>("RateLimitingSettings:FixedWindowCounter:CleaningInterval");
-
-            Timer timer = new Timer((state) =>
-            {
-                using IServiceScope scope = host.Services.CreateScope();
-
-                IFixedWindowCounterCleaner cleaner = scope.ServiceProvider.GetRequiredService<IFixedWindowCounterCleaner>();
-
-                cleaner.Clean();
-            }, state: null, 0, cleaningInterval);
         }
 
         public static void StartSlidingWindowLogsCleaner(IHost host)
@@ -71,11 +60,18 @@ namespace RateLimiting
 
             Timer timer = new Timer((state) =>
             {
-                using IServiceScope scope = host.Services.CreateScope();
+                try
+                {
+                    using IServiceScope scope = host.Services.CreateScope();
 
-                ISlidingWindowLogsCleaner cleaner = scope.ServiceProvider.GetRequiredService<ISlidingWindowLogsCleaner>();
+                    ISlidingWindowLogsCleaner cleaner = scope.ServiceProvider.GetRequiredService<ISlidingWindowLogsCleaner>();
 
-                cleaner.Clean();
+                    cleaner.Clean();
+                }
+                catch (Exception ex)
+                {
+                    Console.Error.WriteLine(ex);
+                }
             }, state: null, 0, cleaningInterval);
         }
     }

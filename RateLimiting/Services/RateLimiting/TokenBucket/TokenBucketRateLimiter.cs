@@ -31,12 +31,13 @@ namespace RateLimiting.Services.RateLimiting.TokenBucket
             int refillAmount = _configuration.GetValue<int>("RateLimitingSettings:TokenBucket:RefillAmount");
             double refillIntervalMs = _configuration.GetValue<double>("RateLimitingSettings:TokenBucket:RefillIntervalMs");
 
-            string storedKey = GetStoredKey(key);
+            string lastUpdateKey = GetStoredKey(Key_LastUpdate);
+            string tokenKey = GetStoredKey(Key_Tokens);
 
             IDatabase db = _connectionMultiplexer.GetDatabase();
 
-            string lastUpdateVal = db.HashGet(storedKey, Key_LastUpdate);
-            string remainingTokensVal = db.HashGet(storedKey, Key_Tokens);
+            string lastUpdateVal = db.HashGet(lastUpdateKey, key);
+            string remainingTokensVal = db.HashGet(tokenKey, key);
             long remainingTokens = long.TryParse(remainingTokensVal, out var tokens) ? tokens : 0;
             double lastUpdateMs = double.TryParse(lastUpdateVal, out var time) ? time : 0;
             double now = TimeSpan.FromTicks(DateTime.UtcNow.Ticks).TotalMilliseconds;
@@ -60,8 +61,8 @@ namespace RateLimiting.Services.RateLimiting.TokenBucket
                 }
 
                 remainingTokens = resetAmount;
-                db.HashSet(storedKey, Key_Tokens, resetAmount);
-                db.HashSet(storedKey, Key_LastUpdate, lastUpdateMs);
+                db.HashSet(tokenKey, key, resetAmount);
+                db.HashSet(lastUpdateKey, key, lastUpdateMs);
 
                 ConsoleHelper.WriteLineDefault($"Refill bucket: {resetAmount} token(s)");
             }
@@ -74,7 +75,7 @@ namespace RateLimiting.Services.RateLimiting.TokenBucket
             {
                 ConsoleHelper.WriteLineDefault($"Remaining tokens (after): {remainingTokens - 1}");
 
-                db.HashDecrement(storedKey, Key_Tokens);
+                db.HashDecrement(tokenKey, key);
             }
             else
             {

@@ -19,6 +19,8 @@
             public const string LeakyBucket = nameof(LeakyBucket);
             public const string FixedWindowCounter = nameof(FixedWindowCounter);
             public const string SlidingWindowLogs = nameof(SlidingWindowLogs);
+            public const string SlidingWindowCounter1 = nameof(SlidingWindowCounter1);
+            public const string SlidingWindowCounter2 = nameof(SlidingWindowCounter2);
         }
     }
 }

@@ -73,5 +73,27 @@ namespace RateLimiting.Controllers
                 .Select(index => Summaries[rng.Next(Summaries.Length)])
                 .ToArray();
         }
+
+        [HttpGet("sliding-window-counter-1")]
+        [ServiceFilter(typeof(SlidingWindowCounter1Limit))]
+        public IEnumerable<string> GetSlidingWindowCounter1([FromHeader] string apiKey)
+        {
+            var rng = new Random();
+            return Enumerable
+                .Range(1, 5)
+                .Select(index => Summaries[rng.Next(Summaries.Length)])
+                .ToArray();
+        }
+
+        [HttpGet("sliding-window-counter-2")]
+        [ServiceFilter(typeof(SlidingWindowCounter2Limit))]
+        public IEnumerable<string> GetSlidingWindowCounter2([FromHeader] string apiKey)
+        {
+            var rng = new Random();
+            return Enumerable
+                .Range(1, 5)
+                .Select(index => Summaries[rng.Next(Summaries.Length)])
+                .ToArray();
+        }
     }
 }

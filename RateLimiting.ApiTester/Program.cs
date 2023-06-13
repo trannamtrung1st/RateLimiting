@@ -19,10 +19,12 @@ namespace RateLimiting.ApiTester
             var leakyBucket = (path: "/api/resources/leaky-bucket", isPost: true);
             var fixedWindowCounter = (path: "/api/resources/fixed-window-counter", isPost: false);
             var slidingWindowLogs = (path: "/api/resources/sliding-window-logs", isPost: false);
+            var slidingWindowCounter1 = (path: "/api/resources/sliding-window-counter-1", isPost: false);
+            var slidingWindowCounter2 = (path: "/api/resources/sliding-window-counter-2", isPost: false);
 
             ParallelLoopResult result = Parallel.ForEach(Enumerable.Range(0, 15), (idx) =>
             {
-                (string path, bool isPost) = slidingWindowLogs;
+                (string path, bool isPost) = slidingWindowCounter2;
 
                 CallEndpoint(httpClient, path, idx, isPost).Wait();
             });
