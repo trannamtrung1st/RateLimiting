@@ -1,10 +1,8 @@
-﻿using RateLimiting.Services.RateLimiting;
-
-namespace RateLimiting.Filters
+﻿namespace RateLimiting.Filters
 {
     public class TokenBucketLimit : RateLimitFilter
     {
-        public TokenBucketLimit(IRateLimiterProvider rateLimiterProvider) : base(rateLimiterProvider)
+        public TokenBucketLimit(string resource) : base(resource)
         {
         }
 

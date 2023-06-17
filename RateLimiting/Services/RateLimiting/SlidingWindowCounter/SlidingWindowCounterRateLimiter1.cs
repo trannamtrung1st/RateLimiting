@@ -22,7 +22,7 @@ namespace RateLimiting.Services.RateLimiting.SlidingWindowCounter
 
         public override string Name => Constants.RateLimitingAlgorithms.SlidingWindowCounter1;
 
-        public override Task<bool> RequestAccess(string key, string requestId)
+        public override async Task<bool> RequestAccess(string resource, string key, string requestId)
         {
             int maxAmount = _configuration.GetValue<int>("RateLimitingSettings:SlidingWindowCounter1:MaxAmount");
             long windowInterval = _configuration.GetValue<long>("RateLimitingSettings:SlidingWindowCounter1:WindowInterval");
@@ -31,9 +31,7 @@ namespace RateLimiting.Services.RateLimiting.SlidingWindowCounter
             long currentMs = (long)TimeSpan.FromTicks(DateTime.UtcNow.Ticks).TotalMilliseconds;
             long currentBucket = currentMs / bucketSize;
             long fromBucket = currentBucket - windowBuckets + 1;
-            string currentStoredKey = GetStoredKey(currentBucket.ToString());
-
-            IDatabase db = _connectionMultiplexer.GetDatabase();
+            string currentStoredKey = GetStoredKey(resource, currentBucket.ToString());
             bool accepted = false;
 
             RedisKey[] keys = new RedisKey[windowBuckets];
@@ -41,38 +39,62 @@ namespace RateLimiting.Services.RateLimiting.SlidingWindowCounter
 
             for (long bucket = fromBucket, idx = 0; bucket < currentBucket; bucket++, idx++)
             {
-                string bucketStoredKey = GetStoredKey(bucket.ToString());
+                string bucketStoredKey = GetStoredKey(resource, bucket.ToString());
                 keys[idx] = bucketStoredKey;
             }
 
-            long[] requests = keys.Select(k =>
+            IDatabase db = _connectionMultiplexer.GetDatabase();
+            string lockKey = GetLockKey(resource, key);
+            string lockValue = GetRandomLockValue();
+            int lockTry = 0;
+            const int MaxLockTryCount = DefaultMaxLockTryCount;
+
+            while (lockTry++ < MaxLockTryCount)
             {
-                RedisValue count = db.HashGet(k, key);
-                return !string.IsNullOrWhiteSpace(count) ? long.Parse(count) : 0;
-            }).ToArray();
-            long requestCount = requests.Sum();
-
-            ConsoleHelper.WriteLineDefault($"Request count in window ({fromBucket} - {currentBucket}): {requestCount}");
-
-            if (requestCount < maxAmount)
-            {
-                ConsoleHelper.WriteLineDefault($"Accepted request {requestId} in window ({fromBucket} - {currentBucket})");
-                accepted = true;
-                db.HashIncrement(currentStoredKey, key);
-
-                if (requests[windowBuckets - 1] == 0)
+                if (await db.LockTakeAsync(lockKey, lockValue, TimeSpan.FromSeconds(DefaultLockTimeOutMs)))
                 {
-                    // [NOTE] make sure we keep the required bucket as long as necessary for calculation
-                    TimeSpan expiry = TimeSpan.FromMilliseconds(windowInterval * (windowBuckets + 1));
-                    db.KeyExpire(currentStoredKey, expiry, when: ExpireWhen.HasNoExpiry);
+                    try
+                    {
+                        lockTry = MaxLockTryCount;
+                        long[] requests = keys.Select(k =>
+                        {
+                            RedisValue count = db.HashGet(k, key);
+                            return !string.IsNullOrWhiteSpace(count) ? long.Parse(count) : 0;
+                        }).ToArray();
+                        long requestCount = requests.Sum();
+
+                        ConsoleHelper.WriteLineDefault($"Request count in window ({fromBucket} - {currentBucket}): {requestCount}");
+
+                        if (requestCount < maxAmount)
+                        {
+                            ConsoleHelper.WriteLineDefault($"Accepted request {requestId} in window ({fromBucket} - {currentBucket})");
+                            accepted = true;
+                            db.HashIncrement(currentStoredKey, key);
+
+                            if (requests[windowBuckets - 1] == 0)
+                            {
+                                // [NOTE] make sure we keep the required bucket as long as necessary for calculation
+                                TimeSpan expiry = TimeSpan.FromMilliseconds(windowInterval * (windowBuckets + 1));
+                                db.KeyExpire(currentStoredKey, expiry, when: ExpireWhen.HasNoExpiry);
+                            }
+                        }
+                        else
+                        {
+                            ConsoleHelper.WriteLineDefault($"Rejected request {requestId} in window ({fromBucket} - {currentBucket})");
+                        }
+                    }
+                    finally
+                    {
+                        await db.LockReleaseAsync(lockKey, lockValue);
+                    }
+                }
+                else
+                {
+                    await Task.Delay(DefaultLockRetryDelay);
                 }
             }
-            else
-            {
-                ConsoleHelper.WriteLineDefault($"Rejected request {requestId} in window ({fromBucket} - {currentBucket})");
-            }
 
-            return Task.FromResult(accepted);
+            return accepted;
         }
     }
 }

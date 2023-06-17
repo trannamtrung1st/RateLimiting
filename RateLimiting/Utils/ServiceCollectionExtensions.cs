@@ -1,6 +1,5 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using RateLimiting.Filters;
 using RateLimiting.Services.RateLimiting;
 using RateLimiting.Services.RateLimiting.FixedWindowCounter;
 using RateLimiting.Services.RateLimiting.LeakyBucket;
@@ -33,13 +32,7 @@ namespace RateLimiting.Utils
                 .AddSingleton<IRateLimiter, SlidingWindowLogsRateLimiter>()
                 .AddSingleton<ISlidingWindowLogsCleaner, SlidingWindowLogsCleaner>()
                 .AddSingleton<IRateLimiter, SlidingWindowCounterRateLimiter1>()
-                .AddSingleton<IRateLimiter, SlidingWindowCounterRateLimiter2>()
-                .AddTransient<TokenBucketLimit>()
-                .AddTransient<LeakyBucketLimit>()
-                .AddTransient<FixedWindowCounterLimit>()
-                .AddTransient<SlidingWindowLogsLimit>()
-                .AddTransient<SlidingWindowCounter1Limit>()
-                .AddTransient<SlidingWindowCounter2Limit>();
+                .AddSingleton<IRateLimiter, SlidingWindowCounterRateLimiter2>();
         }
     }
 }

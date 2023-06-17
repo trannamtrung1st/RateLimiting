@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
@@ -15,23 +16,36 @@ namespace RateLimiting.ApiTester
             httpClient.BaseAddress = new Uri("http://localhost:5000", UriKind.Absolute);
             httpClient.DefaultRequestHeaders.Add("ApiKey", "ApiTester");
 
-            var tokenBucket = (path: "/api/resources/token-bucket", isPost: false);
-            var leakyBucket = (path: "/api/resources/leaky-bucket", isPost: true);
-            var fixedWindowCounter = (path: "/api/resources/fixed-window-counter", isPost: false);
-            var slidingWindowLogs = (path: "/api/resources/sliding-window-logs", isPost: false);
-            var slidingWindowCounter1 = (path: "/api/resources/sliding-window-counter-1", isPost: false);
-            var slidingWindowCounter2 = (path: "/api/resources/sliding-window-counter-2", isPost: false);
-
-            ParallelLoopResult result = Parallel.ForEach(Enumerable.Range(0, 15), (idx) =>
+            List<(string Path, bool IsPost)> endpoints = new List<(string, bool)>()
             {
-                (string path, bool isPost) = slidingWindowCounter2;
+                ("/api/resources/token-bucket", false),
+                ("/api/resources/leaky-bucket", true),
+                ("/api/resources/fixed-window-counter", false),
+                ("/api/resources/sliding-window-logs", false),
+                ("/api/resources/sliding-window-counter-1", false),
+                ("/api/resources/sliding-window-counter-2", false)
+            };
 
-                CallEndpoint(httpClient, path, idx, isPost).Wait();
-            });
-
-            while (!result.IsCompleted)
+            foreach (var endpoint in endpoints)
             {
-                await Task.Delay(1000);
+                (string path, bool isPost) = endpoint;
+                Console.WriteLine($"Testing endpoint: {path}");
+                Console.WriteLine($"============================");
+
+                ParallelLoopResult result = Parallel.ForEach(Enumerable.Range(0, 15), (idx) =>
+                {
+                    CallEndpoint(httpClient, path, idx, isPost).Wait();
+                });
+
+                while (!result.IsCompleted)
+                {
+                    await Task.Delay(1000);
+                }
+
+                Console.WriteLine($"============================");
+                Console.WriteLine("Press enter to continue!");
+                Console.ReadLine();
+                Console.WriteLine("\n\n\n");
             }
         }
 

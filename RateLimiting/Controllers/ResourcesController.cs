@@ -30,7 +30,7 @@ namespace RateLimiting.Controllers
         }
 
         [HttpGet("token-bucket")]
-        [ServiceFilter(typeof(TokenBucketLimit))]
+        [TokenBucketLimit(nameof(GetTokenBucket))]
         public IEnumerable<string> GetTokenBucket([FromHeader] string apiKey)
         {
             var rng = new Random();
@@ -41,7 +41,7 @@ namespace RateLimiting.Controllers
         }
 
         [HttpPost("leaky-bucket")]
-        [ServiceFilter(typeof(LeakyBucketLimit))]
+        [LeakyBucketLimit(nameof(PostLeakyBucket))]
         public IActionResult PostLeakyBucket([FromBody] string data,
             [FromHeader] string apiKey)
         {
@@ -53,7 +53,7 @@ namespace RateLimiting.Controllers
         }
 
         [HttpGet("fixed-window-counter")]
-        [ServiceFilter(typeof(FixedWindowCounterLimit))]
+        [FixedWindowCounterLimit(nameof(GetFixedWindowCounter))]
         public IEnumerable<string> GetFixedWindowCounter([FromHeader] string apiKey)
         {
             var rng = new Random();
@@ -64,7 +64,7 @@ namespace RateLimiting.Controllers
         }
 
         [HttpGet("sliding-window-logs")]
-        [ServiceFilter(typeof(SlidingWindowLogsLimit))]
+        [SlidingWindowLogsLimit(nameof(GetSlidingWindowLogs))]
         public IEnumerable<string> GetSlidingWindowLogs([FromHeader] string apiKey)
         {
             var rng = new Random();
@@ -75,7 +75,7 @@ namespace RateLimiting.Controllers
         }
 
         [HttpGet("sliding-window-counter-1")]
-        [ServiceFilter(typeof(SlidingWindowCounter1Limit))]
+        [SlidingWindowCounter1Limit(nameof(GetSlidingWindowCounter1))]
         public IEnumerable<string> GetSlidingWindowCounter1([FromHeader] string apiKey)
         {
             var rng = new Random();
@@ -86,7 +86,7 @@ namespace RateLimiting.Controllers
         }
 
         [HttpGet("sliding-window-counter-2")]
-        [ServiceFilter(typeof(SlidingWindowCounter2Limit))]
+        [SlidingWindowCounter2Limit(nameof(GetSlidingWindowCounter2))]
         public IEnumerable<string> GetSlidingWindowCounter2([FromHeader] string apiKey)
         {
             var rng = new Random();

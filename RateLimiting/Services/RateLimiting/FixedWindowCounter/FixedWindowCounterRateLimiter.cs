@@ -21,7 +21,7 @@ namespace RateLimiting.Services.RateLimiting.FixedWindowCounter
 
         public override string Name => Constants.RateLimitingAlgorithms.FixedWindowCounter;
 
-        public override Task<bool> RequestAccess(string key, string requestId)
+        public override Task<bool> RequestAccess(string resource, string key, string requestId)
         {
             int windowInterval = _configuration.GetValue<int>("RateLimitingSettings:FixedWindowCounter:WindowInterval");
             int maxAmount = _configuration.GetValue<int>("RateLimitingSettings:FixedWindowCounter:MaxAmount");
@@ -29,7 +29,7 @@ namespace RateLimiting.Services.RateLimiting.FixedWindowCounter
 
             IDatabase db = _connectionMultiplexer.GetDatabase();
 
-            string storedKey = GetStoredKey(currentWindow.ToString());
+            string storedKey = GetStoredKey(resource, currentWindow.ToString());
 
             long requestCount = db.HashIncrement(storedKey, key);
 

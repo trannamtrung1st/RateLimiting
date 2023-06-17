@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 
 namespace RateLimiting.Services.RateLimiting.LeakyBucket
 {
-    // [IMPORTANT] must use distributed lock or Lua script to make it consistent in distributed environments
     public class LeakyBucketRateLimiter : RateLimiter
     {
         private readonly ConnectionMultiplexer _connectionMultiplexer;
@@ -22,13 +21,13 @@ namespace RateLimiting.Services.RateLimiting.LeakyBucket
 
         public override string Name => Constants.RateLimitingAlgorithms.LeakyBucket;
 
-        public override Task<bool> RequestAccess(string key, string requestId)
+        public override Task<bool> RequestAccess(string resource, string key, string requestId)
         {
             if (requestId == null) throw new ArgumentNullException(nameof(requestId));
 
             int queueAmount = _configuration.GetValue<int>("RateLimitingSettings:LeakyBucket:QueueAmount");
 
-            string storedKey = GetStoredKey(key);
+            string storedKey = GetStoredKey(resource, key);
 
             IDatabase db = _connectionMultiplexer.GetDatabase();
 

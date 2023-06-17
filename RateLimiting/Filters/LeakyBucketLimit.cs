@@ -1,10 +1,8 @@
-﻿using RateLimiting.Services.RateLimiting;
-
-namespace RateLimiting.Filters
+﻿namespace RateLimiting.Filters
 {
     public class LeakyBucketLimit : RateLimitFilter
     {
-        public LeakyBucketLimit(IRateLimiterProvider rateLimiterProvider) : base(rateLimiterProvider)
+        public LeakyBucketLimit(string resource) : base(resource)
         {
         }
 

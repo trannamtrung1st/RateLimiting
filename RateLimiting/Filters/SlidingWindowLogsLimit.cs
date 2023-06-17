@@ -1,10 +1,8 @@
-﻿using RateLimiting.Services.RateLimiting;
-
-namespace RateLimiting.Filters
+﻿namespace RateLimiting.Filters
 {
     public class SlidingWindowLogsLimit : RateLimitFilter
     {
-        public SlidingWindowLogsLimit(IRateLimiterProvider rateLimiterProvider) : base(rateLimiterProvider)
+        public SlidingWindowLogsLimit(string resource) : base(resource)
         {
         }
 

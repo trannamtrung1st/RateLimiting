@@ -21,14 +21,14 @@ namespace RateLimiting.Services.RateLimiting.SlidingWindowLogs
 
         public override string Name => Constants.RateLimitingAlgorithms.SlidingWindowLogs;
 
-        public override Task<bool> RequestAccess(string key, string requestId)
+        public override Task<bool> RequestAccess(string resource, string key, string requestId)
         {
             int maxAmount = _configuration.GetValue<int>("RateLimitingSettings:SlidingWindowLogs:MaxAmount");
             long windowInterval = _configuration.GetValue<long>("RateLimitingSettings:SlidingWindowLogs:WindowInterval");
             long currentWindowTime = (long)TimeSpan.FromTicks(DateTime.UtcNow.Ticks).TotalMilliseconds;
             long lastWindowTime = currentWindowTime - windowInterval;
 
-            string storedKey = GetStoredKey(key);
+            string storedKey = GetStoredKey(resource, key);
 
             IDatabase db = _connectionMultiplexer.GetDatabase();
 

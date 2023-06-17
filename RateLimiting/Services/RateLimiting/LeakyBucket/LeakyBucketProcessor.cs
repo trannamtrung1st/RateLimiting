@@ -34,7 +34,7 @@ namespace RateLimiting.Services.RateLimiting.LeakyBucket
 
             IServer server = _connectionMultiplexer.GetServer(endpoint);
 
-            string keysPattern = RateLimiter.GetStoredKeyDefault(Constants.RateLimitingAlgorithms.LeakyBucket, "*");
+            string keysPattern = RateLimiter.GetStoredKeyDefault("*", Constants.RateLimitingAlgorithms.LeakyBucket, "*");
 
             IEnumerable<RedisKey> allLeakyBucketKeys = server.Keys(pattern: keysPattern, pageSize: int.MaxValue);
 

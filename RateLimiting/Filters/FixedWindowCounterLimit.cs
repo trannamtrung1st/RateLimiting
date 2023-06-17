@@ -1,10 +1,8 @@
-﻿using RateLimiting.Services.RateLimiting;
-
-namespace RateLimiting.Filters
+﻿namespace RateLimiting.Filters
 {
     public class FixedWindowCounterLimit : RateLimitFilter
     {
-        public FixedWindowCounterLimit(IRateLimiterProvider rateLimiterProvider) : base(rateLimiterProvider)
+        public FixedWindowCounterLimit(string resource) : base(resource)
         {
         }
 

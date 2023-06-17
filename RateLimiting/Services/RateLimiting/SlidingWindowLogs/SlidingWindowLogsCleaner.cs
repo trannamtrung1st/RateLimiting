@@ -32,7 +32,7 @@ namespace RateLimiting.Services.RateLimiting.SlidingWindowLogs
 
             IServer server = _connectionMultiplexer.GetServer(endpoint);
 
-            string keysPattern = RateLimiter.GetStoredKeyDefault(Constants.RateLimitingAlgorithms.SlidingWindowLogs, "*");
+            string keysPattern = RateLimiter.GetStoredKeyDefault("*", Constants.RateLimitingAlgorithms.SlidingWindowLogs, "*");
 
             RedisKey[] allSlidingWindowLogsKeys = server.Keys(pattern: keysPattern, pageSize: int.MaxValue).ToArray();
 
